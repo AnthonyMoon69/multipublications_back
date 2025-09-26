@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\ConditionType;
 use App\Enums\GenderType;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,6 +18,7 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::factory(),
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
             'brand' => $this->faker->randomElement(['Nike', 'Adidas', 'Zara', 'H&M']),

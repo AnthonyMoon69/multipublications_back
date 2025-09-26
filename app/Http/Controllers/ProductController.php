@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller
 {
@@ -17,7 +18,8 @@ class ProductController extends Controller
     {
         $perPage = max(1, min($request->integer('per_page', 15), 100));
 
-        $products = Product::with(['images', 'listings'])
+        $products = $request->user()->products()
+            ->with(['images', 'listings', 'user'])
             ->filter($request->query())
             ->latest()
             ->paginate($perPage)
@@ -30,8 +32,8 @@ class ProductController extends Controller
     {
         $validated = $this->validatedData($request);
 
-        $product = DB::transaction(function () use ($validated) {
-            $product = Product::create($validated);
+        $product = DB::transaction(function () use ($request, $validated) {
+            $product = $request->user()->products()->create($validated);
 
             if (! empty($validated['images'])) {
                 $this->syncImages($product, $validated['images']);
@@ -41,7 +43,7 @@ class ProductController extends Controller
                 $this->syncListings($product, $validated['listings']);
             }
 
-            return $product->load(['images', 'listings']);
+            return $product->load(['images', 'listings', 'user']);
         });
 
         return ProductResource::make($product)
@@ -50,13 +52,17 @@ class ProductController extends Controller
             ->header('Location', route('products.show', ['product' => $product]));
     }
 
-    public function show(Product $product): ProductResource
+    public function show(Request $request, Product $product): ProductResource
     {
-        return new ProductResource($product->load(['images', 'listings']));
+        $this->ensureOwnership($request, $product);
+
+        return new ProductResource($product->load(['images', 'listings', 'user']));
     }
 
     public function update(Request $request, Product $product): ProductResource
     {
+        $this->ensureOwnership($request, $product);
+
         $validated = $this->validatedData($request);
 
         return DB::transaction(function () use ($product, $validated) {
@@ -72,15 +78,24 @@ class ProductController extends Controller
                 $this->syncListings($product, $validated['listings'] ?? []);
             }
 
-            return ProductResource::make($product->load(['images', 'listings']));
+            return ProductResource::make($product->load(['images', 'listings', 'user']));
         });
     }
 
-    public function destroy(Product $product): Response
+    public function destroy(Request $request, Product $product): Response
     {
+        $this->ensureOwnership($request, $product);
+
         $product->delete();
 
         return response()->noContent();
+    }
+
+    protected function ensureOwnership(Request $request, Product $product): void
+    {
+        if ($product->user_id !== $request->user()->id) {
+            throw new NotFoundHttpException();
+        }
     }
 
     protected function validatedData(Request $request): array
