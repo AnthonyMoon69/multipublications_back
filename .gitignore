@@ -1,0 +1,16 @@
+/vendor/
+/node_modules/
+/public/storage
+/storage/*.key
+/storage/logs/
+/storage/framework/cache/*.php
+/storage/framework/sessions/*.php
+/storage/framework/views/*.php
+.env
+.phpunit.cache
+.php-cs-fixer.cache
+.phpstorm.meta.php
+.idea/
+.vscode/
+.phpunit.result.cache
+.sail/
