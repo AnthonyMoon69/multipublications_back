@@ -5,7 +5,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', '*')],
+    'allowed_origins' => array_filter(
+        array_map(
+            'trim',
+            explode(',', env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', '')))
+        )
+    ) ?: ['*'],
 
     'allowed_origins_patterns' => [],
 
