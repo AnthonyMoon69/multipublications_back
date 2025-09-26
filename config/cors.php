@@ -1,9 +1,15 @@
 <?php
 
-$origins = array_values(array_filter(array_map(
+$origins = array_map(
     'trim',
     explode(',', env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', '')))
-)));
+);
+$origins = array_values(array_filter($origins, fn ($origin) => $origin !== ''));
+
+$explicitWildcard = in_array('*', $origins, true);
+if ($explicitWildcard) {
+    $origins = ['*'];
+}
 
 $supportsCredentials = env('CORS_SUPPORTS_CREDENTIALS');
 $supportsCredentials = filter_var(
@@ -13,7 +19,14 @@ $supportsCredentials = filter_var(
 );
 
 if (empty($origins)) {
-    $origins = ['*'];
+    $origins = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ];
+    $supportsCredentials = $supportsCredentials ?? true;
+} elseif ($origins === ['*']) {
     $supportsCredentials = $supportsCredentials ?? false;
 } else {
     $supportsCredentials = $supportsCredentials ?? true;
