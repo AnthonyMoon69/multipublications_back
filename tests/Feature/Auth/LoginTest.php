@@ -26,6 +26,7 @@ class LoginTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('user.id', $user->id);
+        $response->assertJsonPath('user.image', $user->image);
         $response->assertJsonStructure(['user', 'token']);
     }
 

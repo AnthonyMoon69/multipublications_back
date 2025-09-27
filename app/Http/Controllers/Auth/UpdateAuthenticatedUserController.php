@@ -14,11 +14,11 @@ class UpdateAuthenticatedUserController extends Controller
         $user = $request->user();
 
         $data = collect($request->validated())
-            ->only(['email', 'password'])
-            ->filter(static fn ($value) => $value !== null && $value !== '');
+            ->only(['email', 'password', 'image'])
+            ->toArray();
 
-        if ($data->isNotEmpty()) {
-            $user->fill($data->toArray());
+        if (! empty($data)) {
+            $user->fill($data);
 
             if ($user->isDirty()) {
                 $user->save();

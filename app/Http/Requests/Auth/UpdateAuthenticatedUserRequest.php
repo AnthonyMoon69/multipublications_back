@@ -19,6 +19,7 @@ class UpdateAuthenticatedUserRequest extends FormRequest
         return [
             'email' => ['sometimes', 'required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user()?->id)],
             'password' => ['sometimes', 'required', 'confirmed', Password::defaults()],
+            'image' => ['sometimes', 'nullable', 'string', 'max:2048'],
             'name' => ['prohibited'],
         ];
     }
@@ -27,8 +28,10 @@ class UpdateAuthenticatedUserRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                if (! $this->filled('email') && ! $this->filled('password')) {
-                    $validator->errors()->add('email', 'Debe proporcionar al menos el correo electrónico o la contraseña.');
+                $hasImage = $this->has('image');
+
+                if (! $this->filled('email') && ! $this->filled('password') && ! $hasImage) {
+                    $validator->errors()->add('email', 'Debe proporcionar al menos el correo electrónico, la contraseña o la imagen.');
                 }
             },
         ];

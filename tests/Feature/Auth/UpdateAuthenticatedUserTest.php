@@ -49,6 +49,27 @@ class UpdateAuthenticatedUserTest extends TestCase
         $this->assertTrue(Hash::check('new-password123', $user->password));
     }
 
+    public function test_it_updates_the_image(): void
+    {
+        $user = User::factory()->create([
+            'image' => 'https://example.com/old-image.png',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->putJson('/api/me', [
+            'image' => 'https://example.com/new-image.png',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('data.image', 'https://example.com/new-image.png');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'image' => 'https://example.com/new-image.png',
+        ]);
+    }
+
     public function test_it_requires_unique_email(): void
     {
         $user = User::factory()->create();
